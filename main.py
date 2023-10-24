@@ -37,29 +37,41 @@ collegeplayers = pd.read_sql_query(college, db)
 #         for players with at least 1 at bat (ab column) that year. Sort the table from
 #         highest batting average to lowest, and then by playerid alphabetically.
 #         Show the top 5 results in your report.
-# get the hits
-hits = """SELECT h FROM batting"""
+hits = """SELECT h, ab, playerid, yearid FROM batting"""
 hits_total = pd.read_sql_query(hits, db)
-# print(hits_total)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+hits_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+hits_filtered = hits_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
 
-# get the at bats
-at_bats = """SELECT ab FROM batting"""
-at_bats_total = pd.read_sql_query(at_bats, db)
-# print(at_bats_total)
-
-batting = """SELECT playerid, yearid, ab
-            FROM batting
-            WHERE ab > 1
-            ORDER BY ab, playerid
-            """
-bats = pd.read_sql_query(batting, db)
-# print(bats)
+# print(hits_filtered.head())
 
 #     b)Use the same query as above, but only include players with at least 10
 #         at bats that year. Print the top 5 results.
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 10"""
+hits_total = pd.read_sql_query(hits, db)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+hits_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+hits_filtered = hits_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
+
+# print(hits_filtered.head())
+
 #     c)Now calculate the batting average for players over their entire careers
 #         (all years combined). Only include players with at least 100 at bats,
 #         and print the top 5 results.
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 100"""
+hits_total = pd.read_sql_query(hits, db)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+hits_filtered = hits_total[["playerID", "batting_avg"]]
+hits_filtered = hits_filtered.groupby("playerID").mean()
+hits_filtered = hits_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
+# hits_filtered = hits_filtered.sort_values(by=["playerID"], ascending=[True])
+print(hits_filtered.head())
 
 # %%
 # TASK 3
@@ -68,4 +80,18 @@ bats = pd.read_sql_query(batting, db)
 #     the data you need, then make a graph in Altair to visualize the comparison.
 #     What do you learn?
 
+# select all teams
+teams = """SELECT * FROM teams"""
+teams_total = pd.read_sql_query(teams, db)
+# print(teams_total["name"].value_counts)
+
+# select first team Chicago White Sox
+team1 = """SELECT * FROM teams WHERE name = 'Chicago White Sox'"""
+team1 = pd.read_sql_query(team1, db)
+# print(team1)
+
+# select second team Cincinnati Reds
+team2 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
+team2 = pd.read_sql_query(team2, db)
+print(team2)
 # %%
