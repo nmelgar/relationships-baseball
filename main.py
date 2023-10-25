@@ -83,15 +83,37 @@ print(hits_filtered.head())
 # select all teams
 teams = """SELECT * FROM teams"""
 teams_total = pd.read_sql_query(teams, db)
-# print(teams_total["name"].value_counts)
+# print(teams_total["name"].value_counts())
 
-# select first team Chicago White Sox
-team1 = """SELECT * FROM teams WHERE name = 'Chicago White Sox'"""
+# select first team Cincinnati Reds
+team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
 team1 = pd.read_sql_query(team1, db)
+# print(team1[["HR"]].info())
 # print(team1)
+# home runs over the years
+# team1["yearID"] = pd.to_datetime(team1["yearID"], format="%Y")
+# team1["yearID"] = team1["yearID"].dt.year
+# print(team1["yearID"])
+hr1 = team1[["yearID", "HR"]]
+# print(hr1)
+# chart = alt.Chart(team1).mark_line().encode(x="yearID:T", y="HR:Q")
+# chart
 
-# select second team Cincinnati Reds
-team2 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
+chart = (
+    alt.Chart(team1)
+    .encode(x=alt.X("yearID"), y=alt.Y("HR"), color=alt.value("blue"))
+    .mark_line()
+    # .properties(title="Matthew name through the years")
+)
+chart
+
+
+# select second team Pittsburgh Pirates
+team2 = """SELECT * FROM teams WHERE name = 'Pittsburgh Pirates'"""
 team2 = pd.read_sql_query(team2, db)
-print(team2)
+# print(team2)
+# home runs over the years
+hr2 = team2[["yearID", "HR"]]
+# print(hr2)
+
 # %%
