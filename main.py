@@ -27,6 +27,10 @@ college = """SELECT playerid,schoolid,yearid
 collegeplayers = pd.read_sql_query(college, db)
 # collegeplayers
 
+# alt.Chart(collegeplayers).mark_point().encode(
+#     y="count(schoolID)",
+#     # x="year:T"
+# ).interactive()
 
 # %%
 # result
@@ -73,6 +77,7 @@ hits_filtered = hits_filtered.sort_values(
 # hits_filtered = hits_filtered.sort_values(by=["playerID"], ascending=[True])
 print(hits_filtered.head())
 
+
 # %%
 # TASK 3
 # Pick any two baseball teams and compare them using a metric of your choice
@@ -84,36 +89,29 @@ print(hits_filtered.head())
 teams = """SELECT * FROM teams"""
 teams_total = pd.read_sql_query(teams, db)
 # print(teams_total["name"].value_counts())
+# chart = alt.Chart(teams_total)
+# alt.Chart(teams_total).mark_point().encode(y="name", x="HR")
 
 # select first team Cincinnati Reds
 team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
-team1 = pd.read_sql_query(team1, db)
-# print(team1[["HR"]].info())
-# print(team1)
-# home runs over the years
-# team1["yearID"] = pd.to_datetime(team1["yearID"], format="%Y")
-# team1["yearID"] = team1["yearID"].dt.year
-# print(team1["yearID"])
-hr1 = team1[["yearID", "HR"]]
-# print(hr1)
-# chart = alt.Chart(team1).mark_line().encode(x="yearID:T", y="HR:Q")
-# chart
-
-chart = (
-    alt.Chart(team1)
-    .encode(x=alt.X("yearID"), y=alt.Y("HR"), color=alt.value("blue"))
-    .mark_line()
-    # .properties(title="Matthew name through the years")
+team_chosen_1 = pd.read_sql_query(team1, db)
+team_chosen_1["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+chart1 = (
+    alt.Chart(team_chosen_1)
+    .mark_point()
+    .encode(y="HR:Q", x="Year:T", color=alt.value("red"))
 )
-chart
-
 
 # select second team Pittsburgh Pirates
 team2 = """SELECT * FROM teams WHERE name = 'Pittsburgh Pirates'"""
-team2 = pd.read_sql_query(team2, db)
-# print(team2)
-# home runs over the years
-hr2 = team2[["yearID", "HR"]]
-# print(hr2)
+team_chosen_2 = pd.read_sql_query(team2, db)
+team_chosen_2["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+chart2 = (
+    alt.Chart(team_chosen_2)
+    .mark_point()
+    .encode(y="HR:Q", x="Year:T", color=alt.value("#f2e709"))
+)
 
+hr_compared = chart1 + chart2
+hr_compared
 # %%
