@@ -15,17 +15,32 @@ db = sqlite3.connect(sqlite_file)
 #     each salary. Order the table by salary (highest to lowest) and
 #     print out the table in your report.
 
-salary = """SELECT playerid,salary,yearid,teamid 
-             FROM salaries"""
-salaries = pd.read_sql_query(salary, db)
-# salaries
+# salary = """SELECT playerid,salary,yearid,teamid
+#              FROM salaries"""
+# salaries = pd.read_sql_query(salary, db)
+# print(salaries)
 
-college = """SELECT playerid,schoolid,yearid 
-             FROM collegeplaying
-             WHERE schoolid = 'byu'
-             """
-collegeplayers = pd.read_sql_query(college, db)
-# collegeplayers
+# college = """SELECT playerid,schoolid,yearid
+#              FROM collegeplaying
+#              WHERE schoolid = 'byu'
+#              """
+# collegeplayers = pd.read_sql_query(college, db)
+# print(collegeplayers)
+#          """SELECT sal.playerid, sal.salary, sal.teamid, sal.yearid, cp.schoolid
+#             FROM salaries as sal
+#             LEFT JOIN collegeplaying as cp
+#             ON  sal.playerid = cp.playerid AND
+#                 sal.yearid = cp.yearid
+# """
+
+students = """SELECT cp.playerid, cp.schoolid, cp.yearid, sal.salary
+                FROM collegeplaying as cp
+                LEFT JOIN salaries as sal
+                ON cp.playerid = sal.playerid AND
+                    cp.yearid = sal.yearid
+            """
+students_result = pd.read_sql_query(students, db)
+print(students_result)
 
 # alt.Chart(collegeplayers).mark_point().encode(
 #     y="count(schoolID)",
