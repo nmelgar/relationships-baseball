@@ -10,10 +10,10 @@ db = sqlite3.connect(sqlite_file)
 # %%
 # TASK 1
 # Write an SQL query to create a new dataframe about baseball players who
-#     attended BYU-Idaho. The new table should contain five columns:
-#     playerID, schoolID, salary, and the yearID/teamID associated with
-#     each salary. Order the table by salary (highest to lowest) and
-#     print out the table in your report.
+# attended BYU-Idaho. The new table should contain five columns:
+# playerID, schoolID, salary, and the yearID/teamID associated with
+# each salary. Order the table by salary (highest to lowest) and
+# print out the table in your report.
 
 # salary = """SELECT playerid,salary,yearid,teamid
 #              FROM salaries"""
@@ -26,6 +26,13 @@ db = sqlite3.connect(sqlite_file)
 #              """
 # collegeplayers = pd.read_sql_query(college, db)
 # print(collegeplayers)
+
+college = """SELECT playerid,schoolid,yearid
+             FROM collegeplaying
+             """
+collegeplayers = pd.read_sql_query(college, db)
+print(collegeplayers)
+
 #          """SELECT sal.playerid, sal.salary, sal.teamid, sal.yearid, cp.schoolid
 #             FROM salaries as sal
 #             LEFT JOIN collegeplaying as cp
@@ -33,14 +40,14 @@ db = sqlite3.connect(sqlite_file)
 #                 sal.yearid = cp.yearid
 # """
 
-students = """SELECT cp.playerid, cp.schoolid, cp.yearid, sal.salary
-                FROM collegeplaying as cp
-                LEFT JOIN salaries as sal
-                ON cp.playerid = sal.playerid AND
-                    cp.yearid = sal.yearid
-            """
-students_result = pd.read_sql_query(students, db)
-print(students_result)
+# students = """SELECT cp.playerid, cp.schoolid, cp.yearid, sal.salary
+#                 FROM collegeplaying as cp
+#                 LEFT JOIN salaries as sal
+#                 ON cp.playerid = sal.playerid AND
+#                     cp.yearid = sal.yearid
+#             """
+# students_result = pd.read_sql_query(students, db)
+# print(students_result)
 
 # alt.Chart(collegeplayers).mark_point().encode(
 #     y="count(schoolID)",
@@ -52,10 +59,11 @@ print(students_result)
 # TASK 2
 # This three-part question requires you to calculate batting average (number of hits
 # divided by the number of at-bats)
-#     a)Write an SQL query that provides playerID, yearID, and batting average (h/ab)
-#         for players with at least 1 at bat (ab column) that year. Sort the table from
-#         highest batting average to lowest, and then by playerid alphabetically.
-#         Show the top 5 results in your report.
+
+# a)Write an SQL query that provides playerID, yearID, and batting average (h/ab)
+# for players with at least 1 at bat (ab column) that year. Sort the table from
+# highest batting average to lowest, and then by playerid alphabetically.
+# Show the top 5 results in your report.
 hits = """SELECT h, ab, playerid, yearid FROM batting"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
@@ -64,10 +72,8 @@ hits_filtered = hits_filtered.sort_values(
     by=["batting_avg", "playerID"], ascending=[False, True]
 )
 
-# print(hits_filtered.head())
-
-#     b)Use the same query as above, but only include players with at least 10
-#         at bats that year. Print the top 5 results.
+# b)Use the same query as above, but only include players with at least 10
+# at bats that year. Print the top 5 results.
 hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 10"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
@@ -76,11 +82,9 @@ hits_filtered = hits_filtered.sort_values(
     by=["batting_avg", "playerID"], ascending=[False, True]
 )
 
-# print(hits_filtered.head())
-
-#     c)Now calculate the batting average for players over their entire careers
-#         (all years combined). Only include players with at least 100 at bats,
-#         and print the top 5 results.
+# c)Now calculate the batting average for players over their entire careers
+# (all years combined). Only include players with at least 100 at bats,
+# and print the top 5 results.
 hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 100"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
@@ -96,9 +100,9 @@ print(hits_filtered.head())
 # %%
 # TASK 3
 # Pick any two baseball teams and compare them using a metric of your choice
-#     (average salary, home runs, number of wins, etc). Write an SQL query to get
-#     the data you need, then make a graph in Altair to visualize the comparison.
-#     What do you learn?
+# (average salary, home runs, number of wins, etc). Write an SQL query to get
+# the data you need, then make a graph in Altair to visualize the comparison.
+# What do you learn?
 
 # select all teams
 teams = """SELECT * FROM teams"""
@@ -129,4 +133,3 @@ chart2 = (
 
 hr_compared = chart1 + chart2
 hr_compared
-# %%
