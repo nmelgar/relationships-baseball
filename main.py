@@ -15,44 +15,15 @@ db = sqlite3.connect(sqlite_file)
 # each salary. Order the table by salary (highest to lowest) and
 # print out the table in your report.
 
-# salary = """SELECT playerid,salary,yearid,teamid
-#              FROM salaries"""
-# salaries = pd.read_sql_query(salary, db)
-# print(salaries)
-
-# college = """SELECT playerid,schoolid,yearid
-#              FROM collegeplaying
-#              WHERE schoolid = 'byu'
-#              """
-# collegeplayers = pd.read_sql_query(college, db)
-# print(collegeplayers)
-
-college = """SELECT playerid,schoolid,yearid
-             FROM collegeplaying
-             """
-collegeplayers = pd.read_sql_query(college, db)
-print(collegeplayers)
-
-#          """SELECT sal.playerid, sal.salary, sal.teamid, sal.yearid, cp.schoolid
-#             FROM salaries as sal
-#             LEFT JOIN collegeplaying as cp
-#             ON  sal.playerid = cp.playerid AND
-#                 sal.yearid = cp.yearid
-# """
-
-# students = """SELECT cp.playerid, cp.schoolid, cp.yearid, sal.salary
-#                 FROM collegeplaying as cp
-#                 LEFT JOIN salaries as sal
-#                 ON cp.playerid = sal.playerid AND
-#                     cp.yearid = sal.yearid
-#             """
-# students_result = pd.read_sql_query(students, db)
-# print(students_result)
-
-# alt.Chart(collegeplayers).mark_point().encode(
-#     y="count(schoolID)",
-#     # x="year:T"
-# ).interactive()
+students = """SELECT sal.playerid, cp.schoolid, sal.salary, sal.yearid,  sal.teamid
+                FROM salaries as sal
+                LEFT JOIN collegeplaying as cp
+                ON cp.playerid = sal.playerid
+                WHERE schoolid = 'byu'
+                ORDER BY salary DESC
+            """
+students_players = pd.read_sql_query(students, db)
+print(students_players)
 
 # %%
 # result
@@ -64,23 +35,25 @@ print(collegeplayers)
 # for players with at least 1 at bat (ab column) that year. Sort the table from
 # highest batting average to lowest, and then by playerid alphabetically.
 # Show the top 5 results in your report.
-hits = """SELECT h, ab, playerid, yearid FROM batting"""
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 1"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
-hits_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
-hits_filtered = hits_filtered.sort_values(
+ab1_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+ab1_filtered = ab1_filtered.sort_values(
     by=["batting_avg", "playerID"], ascending=[False, True]
 )
+ab1_filtered.head(5)
 
 # b)Use the same query as above, but only include players with at least 10
 # at bats that year. Print the top 5 results.
 hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 10"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
-hits_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
-hits_filtered = hits_filtered.sort_values(
+ab10_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+ab10_filtered = ab10_filtered.sort_values(
     by=["batting_avg", "playerID"], ascending=[False, True]
 )
+ab10_filtered.head(5)
 
 # c)Now calculate the batting average for players over their entire careers
 # (all years combined). Only include players with at least 100 at bats,
@@ -88,13 +61,12 @@ hits_filtered = hits_filtered.sort_values(
 hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 100"""
 hits_total = pd.read_sql_query(hits, db)
 hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
-hits_filtered = hits_total[["playerID", "batting_avg"]]
-hits_filtered = hits_filtered.groupby("playerID").mean()
-hits_filtered = hits_filtered.sort_values(
+ab100_filtered = hits_total[["playerID", "batting_avg"]]
+ab100_filtered = ab100_filtered.groupby("playerID").mean()
+ab100_filtered = ab100_filtered.sort_values(
     by=["batting_avg", "playerID"], ascending=[False, True]
 )
-# hits_filtered = hits_filtered.sort_values(by=["playerID"], ascending=[True])
-print(hits_filtered.head())
+ab100_filtered.head(5)
 
 
 # %%
@@ -104,12 +76,12 @@ print(hits_filtered.head())
 # the data you need, then make a graph in Altair to visualize the comparison.
 # What do you learn?
 
+# Scale colors for each team
+color_scale = alt.Scale(range=["red", "#f2e709"])
+
 # select all teams
 teams = """SELECT * FROM teams"""
 teams_total = pd.read_sql_query(teams, db)
-# print(teams_total["name"].value_counts())
-# chart = alt.Chart(teams_total)
-# alt.Chart(teams_total).mark_point().encode(y="name", x="HR")
 
 # select first team Cincinnati Reds
 team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
@@ -118,7 +90,12 @@ team_chosen_1["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
 chart1 = (
     alt.Chart(team_chosen_1)
     .mark_point()
-    .encode(y="HR:Q", x="Year:T", color=alt.value("red"))
+    .encode(
+        y=alt.Y("HR:Q", title="Home Runs"),
+        x="Year:T",
+        color=alt.Color("name", type="nominal", scale=color_scale),
+    )
+    .properties(title="CIN vs PIT home runs")
 )
 
 # select second team Pittsburgh Pirates
@@ -128,7 +105,11 @@ team_chosen_2["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
 chart2 = (
     alt.Chart(team_chosen_2)
     .mark_point()
-    .encode(y="HR:Q", x="Year:T", color=alt.value("#f2e709"))
+    .encode(
+        y=alt.Y("HR:Q", title="Home Runs"),
+        x="Year:T",
+        color=alt.Color("name", type="nominal", scale=color_scale),
+    )
 )
 
 hr_compared = chart1 + chart2

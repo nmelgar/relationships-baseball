@@ -1,0 +1,282 @@
+---
+title: "Client Report - Finding relationships in baseball"
+subtitle: "Course DS 250"
+author: "Nefi Melgar"
+format:
+  html:
+    self-contained: true
+    page-layout: full
+    title-block-banner: true
+    toc: true
+    toc-depth: 3
+    toc-location: body
+    number-sections: false
+    html-math-method: katex
+    code-fold: true
+    code-summary: "Show the code"
+    code-overflow: wrap
+    code-copy: hover
+    code-tools:
+        source: false
+        toggle: true
+        caption: See code
+    
+---
+
+```{python}
+# | label: libraries
+# | include: false
+import pandas as pd
+import altair as alt
+import numpy as np
+import sqlite3
+
+from IPython.display import Markdown
+from IPython.display import display
+from tabulate import tabulate
+
+```
+
+
+## Elevator pitch
+
+_When you hear the word “relationship” what is the first thing that comes to mind? Probably not baseball. But a relationship is simply a way to describe how two or more objects are connected. There are many relationships in baseball such as those between teams and managers, players and salaries, even stadiums and concession prices. Let's analyze other relationships in baseball._
+
+```{python}
+# | label: project data
+# | code-summary: Read and format data
+# Include and execute your code here
+sqlite_file = "lahmansbaseballdb.sqlite"
+db = sqlite3.connect(sqlite_file)
+```
+
+## QUESTION 1
+
+__HAS ANY PROFESSIONAL BASEBALL PLAYER ATTENDED TO BYU?__
+
+_In the following table we can see those professional players who attended BYU, their salary, the year they played for a professional team and the team's id._
+
+```{python}
+# | label: Q1
+# | code-summary: Code to analyze players who attended BYU
+# Code to execute
+students = """SELECT sal.playerid, cp.schoolid, sal.salary, sal.yearid,  sal.teamid
+                FROM salaries as sal
+                LEFT JOIN collegeplaying as cp
+                ON cp.playerid = sal.playerid
+                WHERE schoolid = 'byu'
+                ORDER BY salary DESC
+            """
+students_players = pd.read_sql_query(students, db)
+print(students_players)
+
+```
+_Does a 9,000k salary look bad? I don't think so._
+
+## QUESTION 2
+
+__WHAT PLAYERS HAVE GOTTEN THE HIGHEST BATTING AVERAGE OVER THEIR ENTIRE CAREERS?__
+
+_The batting average is the number of hits divided by the number of at-bats of the player. If a player has a high number of at-bats it doesn't mean he will have a high number of hits, they will vary from player to player, let's analyz more of this._
+
+```{python}
+# | label: Q2
+# | code-summary: Code to batting average w/at least 1 at-bat
+# Include code here
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 1"""
+hits_total = pd.read_sql_query(hits, db)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+ab1_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+ab1_filtered = ab1_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
+ab1_filtered.head(5)
+```
+
+_It seems the amount of players with a batting average of 1 is high._
+
+```{python}
+# | label: Q3
+# | code-summary: Code to batting average w/at least 10 at-bat
+# Include code here
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 10"""
+hits_total = pd.read_sql_query(hits, db)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+ab10_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+ab10_filtered = ab10_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
+ab10_filtered.head(5)
+```
+
+_Batting average has decreased as the at bats increased._
+
+```{python}
+# | label: Q4
+# | code-summary: Code to batting average w/at least 100 at-bat
+# Include code here
+hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 100"""
+hits_total = pd.read_sql_query(hits, db)
+hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+ab100_filtered = hits_total[["playerID", "batting_avg"]]
+ab100_filtered = ab100_filtered.groupby("playerID").mean()
+ab100_filtered = ab100_filtered.sort_values(
+    by=["batting_avg", "playerID"], ascending=[False, True]
+)
+ab100_filtered.head(5)
+```
+
+_Batting average seems to be low, but these players have more than 100 at-bats._
+
+## QUESTION 3
+
+__IS THERE A BIG DIFFERENCE FOR HOME RUNS NUMBERS WHEN COMPARING BIG AND FAMOUS TEAMS?__
+
+_There have been many baseball teams since this beautiful sport started, many of them still making history and adding numbers to their statistics, let's compare 2 of these teams. We will pay special attention to the number of home runs. Team 1 will be Cincinnati Reds, and team 2 will be Pittsburgh Pirates._
+
+_Both teams started registering home runs around the same years, before 1880, Pittsburgh started with a high amount of home runs compared to Cincinnati, but for some reason Cincinnati has a higher amount of home runs through the years, they have a clear advantage._
+
+```{python}
+# | label: Q5
+# | code-summary: Code to compare CIN vs PIT home runs
+# Include and execute your code here
+# Scale colors for each team
+color_scale = alt.Scale(range=["red", "#f2e709"])
+
+# select all teams
+teams = """SELECT * FROM teams"""
+teams_total = pd.read_sql_query(teams, db)
+
+# select first team Cincinnati Reds
+team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
+team_chosen_1 = pd.read_sql_query(team1, db)
+team_chosen_1["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+chart1 = (
+    alt.Chart(team_chosen_1)
+    .mark_point()
+    .encode(
+        y=alt.Y("HR:Q", title="Home Runs"),
+        x="Year:T",
+        color=alt.Color("name", type="nominal", scale=color_scale),
+    )
+    .properties(title="CIN vs PIT home runs")
+)
+
+# select second team Pittsburgh Pirates
+team2 = """SELECT * FROM teams WHERE name = 'Pittsburgh Pirates'"""
+team_chosen_2 = pd.read_sql_query(team2, db)
+team_chosen_2["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+chart2 = (
+    alt.Chart(team_chosen_2)
+    .mark_point()
+    .encode(
+        y=alt.Y("HR:Q", title="Home Runs"),
+        x="Year:T",
+        color=alt.Color("name", type="nominal", scale=color_scale),
+    )
+)
+
+hr_compared = chart1 + chart2
+hr_compared
+```
+
+_This table shows the home runs through the years for both teams._
+
+
+## APPENDIX A (All Python Code)
+
+```python
+# %%
+# import pandas as pd
+# import altair as alt
+# import sqlite3
+
+# # %%
+# sqlite_file = "lahmansbaseballdb.sqlite"
+# db = sqlite3.connect(sqlite_file)
+
+# %%
+# # TASK 1
+# students = """SELECT sal.playerid, cp.schoolid, sal.salary, sal.yearid,  sal.teamid
+#                 FROM salaries as sal
+#                 LEFT JOIN collegeplaying as cp
+#                 ON cp.playerid = sal.playerid
+#                 WHERE schoolid = 'byu'
+#                 ORDER BY salary DESC
+#             """
+# students_players = pd.read_sql_query(students, db)
+# print(students_players)
+
+# result
+# # TASK 2
+# hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 1"""
+# hits_total = pd.read_sql_query(hits, db)
+# hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+# ab1_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+# ab1_filtered = ab1_filtered.sort_values(
+#     by=["batting_avg", "playerID"], ascending=[False, True]
+# )
+# ab1_filtered.head(5)
+
+# hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 10"""
+# hits_total = pd.read_sql_query(hits, db)
+# hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+# ab10_filtered = hits_total[["playerID", "yearID", "batting_avg"]]
+# ab10_filtered = ab10_filtered.sort_values(
+#     by=["batting_avg", "playerID"], ascending=[False, True]
+# )
+# ab10_filtered.head(5)
+
+# hits = """SELECT h, ab, playerid, yearid FROM batting WHERE ab >= 100"""
+# hits_total = pd.read_sql_query(hits, db)
+# hits_total["batting_avg"] = hits_total["H"] / hits_total["AB"]
+# ab100_filtered = hits_total[["playerID", "batting_avg"]]
+# ab100_filtered = ab100_filtered.groupby("playerID").mean()
+# ab100_filtered = ab100_filtered.sort_values(
+#     by=["batting_avg", "playerID"], ascending=[False, True]
+# )
+# ab100_filtered.head(5)
+
+# # TASK 3
+# Scale colors for each team
+# color_scale = alt.Scale(range=["red", "#f2e709"])
+
+# # select all teams
+# teams = """SELECT * FROM teams"""
+# teams_total = pd.read_sql_query(teams, db)
+
+# # select first team Cincinnati Reds
+# team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
+# team_chosen_1 = pd.read_sql_query(team1, db)
+# team_chosen_1["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+# chart1 = (
+#     alt.Chart(team_chosen_1)
+#     .mark_point()
+#     .encode(
+#         y=alt.Y("HR:Q", title="Home Runs"),
+#         x="Year:T",
+#         color=alt.Color("name", type="nominal", scale=color_scale),
+#     )
+#     .properties(title="CIN vs PIT home runs")
+# )
+
+# # select second team Pittsburgh Pirates
+# team2 = """SELECT * FROM teams WHERE name = 'Pittsburgh Pirates'"""
+# team_chosen_2 = pd.read_sql_query(team2, db)
+# team_chosen_2["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
+# chart2 = (
+#     alt.Chart(team_chosen_2)
+#     .mark_point()
+#     .encode(
+#         y=alt.Y("HR:Q", title="Home Runs"),
+#         x="Year:T",
+#         color=alt.Color("name", type="nominal", scale=color_scale),
+#     )
+# )
+
+# hr_compared = chart1 + chart2
+# hr_compared
+
+```
+
+
