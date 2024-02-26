@@ -2,6 +2,8 @@
 import pandas as pd
 import altair as alt
 import sqlite3
+import plotly.express as px
+import plotly.graph_objects as go
 
 # %%
 sqlite_file = "lahmansbaseballdb.sqlite"
@@ -78,41 +80,31 @@ ab100_filtered.head(5)
 # the data you need, then make a graph in Altair to visualize the comparison.
 # What do you learn?
 
-# Scale colors for each team
-color_scale = alt.Scale(range=["red", "#f2e709"])
-
+# %%
 # select all teams
 teams = """SELECT * FROM teams"""
 teams_total = pd.read_sql_query(teams, db)
 
+teams_total
+
+# %%
+team1 = "Cincinnati Reds"
+team2 = "Pittsburgh Pirates"
 # select first team Cincinnati Reds
-team1 = """SELECT * FROM teams WHERE name = 'Cincinnati Reds'"""
-team_chosen_1 = pd.read_sql_query(team1, db)
-team_chosen_1["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
-chart1 = (
-    alt.Chart(team_chosen_1)
-    .mark_point()
-    .encode(
-        y=alt.Y("HR:Q", title="Home Runs"),
-        x="Year:T",
-        color=alt.Color("name", type="nominal", scale=color_scale),
-    )
-    .properties(title="CIN vs PIT home runs")
-)
+select_teams = """SELECT * FROM teams WHERE name = 'Cincinnati Reds' OR name = 'Pittsburgh Pirates'"""
+chosen_teams = pd.read_sql_query(select_teams, db)
+chosen_teams["Year"] = pd.to_datetime(chosen_teams["yearID"], format="%Y")
 
-# select second team Pittsburgh Pirates
-team2 = """SELECT * FROM teams WHERE name = 'Pittsburgh Pirates'"""
-team_chosen_2 = pd.read_sql_query(team2, db)
-team_chosen_2["Year"] = pd.to_datetime(team_chosen_1["yearID"], format="%Y")
-chart2 = (
-    alt.Chart(team_chosen_2)
-    .mark_point()
-    .encode(
-        y=alt.Y("HR:Q", title="Home Runs"),
-        x="Year:T",
-        color=alt.Color("name", type="nominal", scale=color_scale),
-    )
-)
+chosen_teams
 
-hr_compared = chart1 + chart2
-hr_compared
+chart_1 = px.scatter(
+    chosen_teams,
+    x="Year",
+    y="HR",
+    color="name",
+    labels={"HR": "Home Runs", "name": "Team"},
+    title="Home Runs through the years",
+)
+chart_1.show()
+
+# %%
