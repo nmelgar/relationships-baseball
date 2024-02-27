@@ -84,12 +84,8 @@ ab100_filtered.head(5)
 # select all teams
 teams = """SELECT * FROM teams"""
 teams_total = pd.read_sql_query(teams, db)
-
 teams_total
 
-# %%
-team1 = "Cincinnati Reds"
-team2 = "Pittsburgh Pirates"
 # select first team Cincinnati Reds
 select_teams = """SELECT * FROM teams WHERE name = 'Cincinnati Reds' OR name = 'Pittsburgh Pirates'"""
 chosen_teams = pd.read_sql_query(select_teams, db)
