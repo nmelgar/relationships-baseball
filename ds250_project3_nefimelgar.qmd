@@ -29,14 +29,9 @@ execute:
 # | label: libraries
 # | include: false
 import pandas as pd
-import altair as alt
 import sqlite3
 import plotly.express as px
 import plotly.graph_objects as go
-
-from IPython.display import Markdown
-from IPython.display import display
-from tabulate import tabulate
 
 ```
 
@@ -56,7 +51,7 @@ db = sqlite3.connect(sqlite_file)
 
 __HAS ANY PROFESSIONAL BASEBALL PLAYER ATTENDED TO BYU?__
 
-_In the following table we can see those professional players who attended BYU, their salary, the year they played for a professional team and the team's id._
+_In the following table we can see those professional players who attended BYU-I, their salary, the year they played for a professional team and the team's id._
 
 ```{python}
 # | label: Q1
@@ -66,14 +61,14 @@ students = """SELECT sal.playerid, cp.schoolid, sal.salary, sal.yearid,  sal.tea
                 FROM salaries as sal
                 LEFT JOIN collegeplaying as cp
                 ON cp.playerid = sal.playerid
-                WHERE schoolid = 'byu'
+                WHERE schoolid = 'idbyuid'
                 ORDER BY salary DESC
             """
 students_players = pd.read_sql_query(students, db)
 print(students_players)
 
 ```
-_Does a 9,000k salary look bad? I don't think so._
+_Does a 4000000 salary look bad? I don't think so._
 
 ## QUESTION 2
 

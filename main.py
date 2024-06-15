@@ -1,6 +1,5 @@
 # %%
 import pandas as pd
-import altair as alt
 import sqlite3
 import plotly.express as px
 import plotly.graph_objects as go
@@ -21,7 +20,7 @@ students = """SELECT sal.playerid, cp.schoolid, sal.salary, sal.yearid,  sal.tea
                 FROM salaries as sal
                 LEFT JOIN collegeplaying as cp
                 ON cp.playerid = sal.playerid
-                WHERE schoolid = 'byu'
+                WHERE schoolid = 'idbyuid'
                 ORDER BY salary DESC
             """
 students_players = pd.read_sql_query(students, db)
@@ -82,9 +81,9 @@ ab100_filtered.head(5)
 
 # %%
 # select all teams
-teams = """SELECT * FROM teams"""
-teams_total = pd.read_sql_query(teams, db)
-teams_total
+# teams = """SELECT * FROM teams"""
+# teams_total = pd.read_sql_query(teams, db)
+# teams_total
 
 # select first team Cincinnati Reds
 select_teams = """SELECT * FROM teams WHERE name = 'Cincinnati Reds' OR name = 'Pittsburgh Pirates'"""
@@ -103,3 +102,4 @@ chart_1 = px.scatter(
     title="Home Runs through the years",
 )
 chart_1.show()
+# %%
